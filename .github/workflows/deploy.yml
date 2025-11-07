@@ -26,6 +26,9 @@ jobs:
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
 
+      - name: Clear webpack and expo caches
+        run: rm -rf node_modules/.cache .expo web-build
+
       - name: Build for web
         run: npx expo export:web
         env:
