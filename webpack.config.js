@@ -5,7 +5,13 @@ module.exports = async function (env, argv) {
     {
       ...env,
       babel: {
-        dangerouslyAddModulePathsToTranspile: ['@react-navigation'],
+        dangerouslyAddModulePathsToTranspile: [
+          '@react-navigation',
+          '@react-navigation/elements',
+          '@react-navigation/native',
+          '@react-navigation/bottom-tabs',
+          '@react-navigation/native-stack',
+        ],
       },
     },
     argv
