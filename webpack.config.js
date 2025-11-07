@@ -1,5 +1,6 @@
 const createExpoWebpackConfigAsync = require('@expo/webpack-config');
 const webpack = require('webpack');
+const path = require('path');
 
 module.exports = async function (env, argv) {
   const config = await createExpoWebpackConfigAsync(
@@ -31,6 +32,12 @@ module.exports = async function (env, argv) {
   if (HtmlWebpackPlugin) {
     HtmlWebpackPlugin.userOptions.publicPath = publicPath;
   }
+
+  // react-native-safe-area-context를 웹용 stub으로 대체
+  config.resolve.alias = {
+    ...config.resolve.alias,
+    'react-native-safe-area-context': path.resolve(__dirname, 'safe-area-context-stub.js'),
+  };
 
   // Node.js polyfills 추가
   config.resolve.fallback = {
