@@ -2,6 +2,7 @@
   "name": "tripmate",
   "version": "1.0.0",
   "main": "index.ts",
+  "homepage": "/solideo-Day2-01-15-Practice2",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
