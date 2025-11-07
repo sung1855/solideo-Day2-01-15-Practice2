@@ -33,12 +33,6 @@ module.exports = async function (env, argv) {
     HtmlWebpackPlugin.userOptions.publicPath = publicPath;
   }
 
-  // react-native-safe-area-context를 웹용 stub으로 대체
-  config.resolve.alias = {
-    ...config.resolve.alias,
-    'react-native-safe-area-context': path.resolve(__dirname, 'safe-area-context-stub.js'),
-  };
-
   // Node.js polyfills 추가
   config.resolve.fallback = {
     ...config.resolve.fallback,
@@ -61,6 +55,14 @@ module.exports = async function (env, argv) {
     new webpack.DefinePlugin({
       'typeof require': JSON.stringify('undefined'),
     })
+  );
+
+  // react-native-safe-area-context를 웹용 stub으로 강제 대체
+  config.plugins.push(
+    new webpack.NormalModuleReplacementPlugin(
+      /react-native-safe-area-context/,
+      path.resolve(__dirname, 'safe-area-context-stub.js')
+    )
   );
 
   // 외부 모듈 제외
