@@ -58,6 +58,14 @@ module.exports = async function (env, argv) {
     )
   );
 
+  // react-native-maps를 웹용 stub으로 강제 대체
+  config.plugins.push(
+    new webpack.NormalModuleReplacementPlugin(
+      /^react-native-maps$/,
+      path.resolve(__dirname, 'react-native-maps-stub.js')
+    )
+  );
+
   // @react-navigation/elements에서 require() 호출을 import로 대체 (src와 lib 모두 처리)
   config.module.rules.push({
     test: /\.(js|jsx|ts|tsx)$/,
