@@ -58,12 +58,22 @@ module.exports = async function (env, argv) {
     )
   );
 
-  // @react-navigation/elements의 require 호출을 처리하기 위한 전역 require 제공
-  config.plugins.push(
-    new webpack.ProvidePlugin({
-      require: [path.resolve(__dirname, 'require-stub.js'), 'default']
-    })
-  );
+  // @react-navigation/elements에서 require() 호출을 import로 대체 (src와 lib 모두 처리)
+  config.module.rules.push({
+    test: /\.(js|jsx|ts|tsx)$/,
+    include: /node_modules\/@react-navigation\/elements/,
+    enforce: 'pre',
+    use: [
+      {
+        loader: 'string-replace-loader',
+        options: {
+          search: /require\(['"]react-native-safe-area-context['"]\)/g,
+          replace: '(function() { var stub = {}; stub.SafeAreaListener = undefined; return stub; })()',
+          flags: 'g'
+        }
+      }
+    ]
+  });
 
   // 외부 모듈 제외
   config.externals = {
