@@ -50,19 +50,19 @@ module.exports = async function (env, argv) {
     "fs": false,
   };
 
-  // require를 전역으로 제공
-  config.plugins.push(
-    new webpack.DefinePlugin({
-      'typeof require': JSON.stringify('undefined'),
-    })
-  );
-
   // react-native-safe-area-context를 웹용 stub으로 강제 대체
   config.plugins.push(
     new webpack.NormalModuleReplacementPlugin(
       /react-native-safe-area-context/,
       path.resolve(__dirname, 'safe-area-context-stub.js')
     )
+  );
+
+  // @react-navigation/elements의 require 호출을 처리하기 위한 전역 require 제공
+  config.plugins.push(
+    new webpack.ProvidePlugin({
+      require: [path.resolve(__dirname, 'require-stub.js'), 'default']
+    })
   );
 
   // 외부 모듈 제외
