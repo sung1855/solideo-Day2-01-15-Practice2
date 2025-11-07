@@ -25,5 +25,27 @@ module.exports = async function (env, argv) {
     HtmlWebpackPlugin.userOptions.publicPath = publicPath;
   }
 
+  // Node.js polyfills 추가
+  config.resolve.fallback = {
+    ...config.resolve.fallback,
+    "crypto": false,
+    "stream": false,
+    "buffer": false,
+    "util": false,
+    "assert": false,
+    "http": false,
+    "https": false,
+    "os": false,
+    "url": false,
+    "zlib": false,
+    "path": false,
+    "fs": false,
+  };
+
+  // 외부 모듈 제외
+  config.externals = {
+    ...config.externals,
+  };
+
   return config;
 };
