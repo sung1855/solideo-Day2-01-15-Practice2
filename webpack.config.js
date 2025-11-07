@@ -1,4 +1,5 @@
 const createExpoWebpackConfigAsync = require('@expo/webpack-config');
+const webpack = require('webpack');
 
 module.exports = async function (env, argv) {
   const config = await createExpoWebpackConfigAsync(
@@ -47,6 +48,13 @@ module.exports = async function (env, argv) {
     "path": false,
     "fs": false,
   };
+
+  // require를 전역으로 제공
+  config.plugins.push(
+    new webpack.DefinePlugin({
+      'typeof require': JSON.stringify('undefined'),
+    })
+  );
 
   // 외부 모듈 제외
   config.externals = {
