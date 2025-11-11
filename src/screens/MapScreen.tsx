@@ -6,13 +6,14 @@ import { useTripStore } from '../store/tripStore';
 const { width, height } = Dimensions.get('window');
 
 // Leaflet 컴포넌트들 (웹 전용)
-let MapContainer: any, TileLayer: any, LeafletMarker: any, LeafletPolyline: any;
+let MapContainer: any, TileLayer: any, LeafletMarker: any, LeafletPolyline: any, useMap: any;
 if (Platform.OS === 'web') {
   const leaflet = require('react-leaflet');
   MapContainer = leaflet.MapContainer;
   TileLayer = leaflet.TileLayer;
   LeafletMarker = leaflet.Marker;
   LeafletPolyline = leaflet.Polyline;
+  useMap = leaflet.useMap;
 
   // Leaflet CSS를 동적으로 로드
   if (typeof document !== 'undefined' && !document.getElementById('leaflet-css')) {
@@ -57,14 +58,21 @@ const MapScreen = () => {
   // 웹용 지도 렌더링 함수
   const renderWebMap = () => {
     const center: [number, number] = selectedRoute
-      ? [selectedRoute.departure.coordinates.latitude, selectedRoute.departure.coordinates.longitude]
+      ? [
+          (selectedRoute.departure.coordinates.latitude + selectedRoute.arrival.coordinates.latitude) / 2,
+          (selectedRoute.departure.coordinates.longitude + selectedRoute.arrival.coordinates.longitude) / 2
+        ]
       : [defaultRegion.latitude, defaultRegion.longitude];
+
+    // selectedRoute ID를 key로 사용하여 경로 변경시 맵 재렌더링
+    const mapKey = selectedRoute ? `map-${selectedRoute.id}` : 'map-default';
 
     return (
       <div style={{ width: '100%', height: '100%' }}>
         <MapContainer
+          key={mapKey}
           center={center}
-          zoom={selectedRoute ? 7 : 10}
+          zoom={selectedRoute ? 8 : 10}
           style={{ width: '100%', height: '100%' }}
         >
           <TileLayer

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { TripInfo, Route, ItineraryItem, SortType } from '../types';
 import { mockRoutes } from '../data/mockData';
+import { getCityCoordinates, calculateDistance } from '../services/geocoding';
 
 interface TripState {
   // 여행 정보
@@ -29,7 +30,7 @@ interface TripState {
   getItineraryByDay: (day: number) => ItineraryItem[];
 
   // 경로 검색 (Mock)
-  searchRoutes: (tripInfo: TripInfo) => void;
+  searchRoutes: (tripInfo: TripInfo) => Promise<void>;
 }
 
 export const useTripStore = create<TripState>((set, get) => ({
@@ -101,12 +102,21 @@ export const useTripStore = create<TripState>((set, get) => ({
   },
 
   // Mock 경로 검색
-  searchRoutes: (tripInfo) => {
+  searchRoutes: async (tripInfo) => {
     set({ tripInfo });
 
     // 입력된 출발지와 도착지를 기반으로 경로 생성
-    const generateRoutes = () => {
+    const generateRoutes = async () => {
       const { departure, destination, departureDate, duration, travelers } = tripInfo;
+
+      // 출발지와 도착지의 실제 좌표 가져오기
+      const [departureCoords, arrivalCoords] = await Promise.all([
+        getCityCoordinates(departure),
+        getCityCoordinates(destination),
+      ]);
+
+      // 실제 거리 계산
+      const actualDistance = calculateDistance(departureCoords, arrivalCoords);
 
       // 기본 경로 템플릿들
       const transportTypes = [
@@ -127,16 +137,16 @@ export const useTripStore = create<TripState>((set, get) => ({
           const baseTime = 9 + (i * 3); // 09:00, 12:00, 15:00...
           const departureTime = `${baseTime.toString().padStart(2, '0')}:00`;
 
-          // 거리 추정 (실제로는 API로 계산)
-          const estimatedDistance = 300 + Math.random() * 200; // 300-500km
-          const durationMinutes = Math.round((estimatedDistance / transport.speed) * 60);
+          // 실제 거리 기반 소요 시간 계산
+          const durationMinutes = Math.round((actualDistance / transport.speed) * 60);
           const arrivalHour = baseTime + Math.floor(durationMinutes / 60);
           const arrivalMinute = durationMinutes % 60;
           const arrivalTime = `${(arrivalHour % 24).toString().padStart(2, '0')}:${arrivalMinute.toString().padStart(2, '0')}`;
 
-          // 가격 계산
-          const basePrice = Math.round(estimatedDistance * transport.priceMultiplier * 100);
-          const price = basePrice + Math.round((Math.random() - 0.5) * basePrice * 0.3);
+          // 실제 거리 기반 가격 계산
+          const basePrice = Math.round(actualDistance * transport.priceMultiplier * 100);
+          const priceVariation = Math.round((Math.random() - 0.5) * basePrice * 0.3);
+          const price = Math.max(basePrice + priceVariation, 10000); // 최소 10,000원
 
           const route: Route = {
             id: routeId.toString(),
@@ -146,12 +156,12 @@ export const useTripStore = create<TripState>((set, get) => ({
             departure: {
               location: departure,
               time: departureTime,
-              coordinates: { latitude: 37.5 + Math.random() * 0.1, longitude: 127 + Math.random() * 0.1 },
+              coordinates: departureCoords,
             },
             arrival: {
               location: destination,
               time: arrivalTime,
-              coordinates: { latitude: 35.1 + Math.random() * 0.1, longitude: 129 + Math.random() * 0.1 },
+              coordinates: arrivalCoords,
             },
             duration: durationMinutes,
             price,
@@ -170,7 +180,7 @@ export const useTripStore = create<TripState>((set, get) => ({
     };
 
     // 생성된 경로 설정
-    const routes = generateRoutes();
+    const routes = await generateRoutes();
     set({ routes });
   },
 }));

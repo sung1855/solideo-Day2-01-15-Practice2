@@ -155,6 +155,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginHorizontal: 16,
     marginBottom: 16,
+    maxWidth: 600, // 웹에서 너무 넓지 않도록
+    alignSelf: 'center', // 중앙 정렬
+    width: '100%', // 전체 너비 활용
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
