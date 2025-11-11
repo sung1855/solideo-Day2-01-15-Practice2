@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { TripInfo, Route, ItineraryItem, SortType } from '../types';
 import { mockRoutes } from '../data/mockData';
-import { getCityCoordinates, calculateDistance } from '../services/geocoding';
+import { getCityInfo, calculateDistance, getAvailableTransportTypes } from '../services/geocoding';
 
 interface TripState {
   // 여행 정보
@@ -109,21 +109,42 @@ export const useTripStore = create<TripState>((set, get) => ({
     const generateRoutes = async () => {
       const { departure, destination, departureDate, duration, travelers } = tripInfo;
 
-      // 출발지와 도착지의 실제 좌표 가져오기
-      const [departureCoords, arrivalCoords] = await Promise.all([
-        getCityCoordinates(departure),
-        getCityCoordinates(destination),
+      // 출발지와 도착지의 실제 정보 가져오기 (좌표 + 국가)
+      const [departureInfo, arrivalInfo] = await Promise.all([
+        getCityInfo(departure),
+        getCityInfo(destination),
       ]);
 
       // 실제 거리 계산
-      const actualDistance = calculateDistance(departureCoords, arrivalCoords);
+      const actualDistance = calculateDistance(
+        departureInfo.coordinates,
+        arrivalInfo.coordinates
+      );
 
-      // 기본 경로 템플릿들
-      const transportTypes = [
+      // 이용 가능한 교통수단 필터링
+      const availableTransportTypes = getAvailableTransportTypes(
+        departureInfo.countryCode,
+        arrivalInfo.countryCode,
+        actualDistance
+      );
+
+      // 이용 가능한 교통수단이 없으면 빈 배열 반환
+      if (availableTransportTypes.length === 0) {
+        console.warn('No available transport types for this route');
+        return [];
+      }
+
+      // 교통수단별 템플릿
+      const allTransportTypes = [
         { type: 'train', operators: ['KTX', 'SRT', '무궁화호'], speed: 120, priceMultiplier: 1.2 },
         { type: 'airplane', operators: ['대한항공', '아시아나항공', '제주항공', '진에어'], speed: 600, priceMultiplier: 2.5 },
         { type: 'bus', operators: ['고속버스', '우등고속', '시외버스'], speed: 80, priceMultiplier: 0.7 },
       ];
+
+      // 이용 가능한 교통수단만 필터링
+      const transportTypes = allTransportTypes.filter(t =>
+        availableTransportTypes.includes(t.type as any)
+      );
 
       const generatedRoutes: Route[] = [];
       let routeId = 1;
@@ -156,12 +177,12 @@ export const useTripStore = create<TripState>((set, get) => ({
             departure: {
               location: departure,
               time: departureTime,
-              coordinates: departureCoords,
+              coordinates: departureInfo.coordinates,
             },
             arrival: {
               location: destination,
               time: arrivalTime,
-              coordinates: arrivalCoords,
+              coordinates: arrivalInfo.coordinates,
             },
             duration: durationMinutes,
             price,
