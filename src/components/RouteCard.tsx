@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Route, TransportType } from '../types';
+import { getBookingUrl, openBookingSite, getBookingHelpMessage } from '../services/booking';
 
 interface RouteCardProps {
   route: Route;
@@ -66,6 +67,37 @@ const formatPrice = (price: number): string => {
 const RouteCard: React.FC<RouteCardProps> = ({ route, onPress }) => {
   const iconName = getTransportIcon(route.transportType);
   const iconColor = getTransportColor(route.transportType);
+
+  // 예매하기 버튼 핸들러
+  const handleBooking = (e: any) => {
+    e.stopPropagation(); // 카드 클릭 이벤트 전파 방지
+
+    const bookingInfo = getBookingUrl(
+      route.transportType,
+      route.operator,
+      route.departure.location,
+      route.arrival.location
+    );
+
+    const helpMessage = getBookingHelpMessage(bookingInfo);
+
+    if (typeof window !== 'undefined' && window.confirm) {
+      // 웹 환경
+      if (window.confirm(`${helpMessage}\n\n${bookingInfo.siteName}로 이동하시겠습니까?`)) {
+        openBookingSite(bookingInfo);
+      }
+    } else {
+      // 모바일 환경
+      Alert.alert(
+        '예매 사이트 이동',
+        helpMessage,
+        [
+          { text: '취소', style: 'cancel' },
+          { text: '이동', onPress: () => openBookingSite(bookingInfo) },
+        ]
+      );
+    }
+  };
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
@@ -147,6 +179,17 @@ const RouteCard: React.FC<RouteCardProps> = ({ route, onPress }) => {
           ))}
         </View>
       )}
+
+      {/* 예매하기 버튼 */}
+      <TouchableOpacity
+        style={styles.bookingButton}
+        onPress={handleBooking}
+        activeOpacity={0.7}
+      >
+        <Ionicons name="cart-outline" size={18} color="#fff" style={styles.bookingIcon} />
+        <Text style={styles.bookingButtonText}>예매하기</Text>
+        <Ionicons name="open-outline" size={16} color="#fff" />
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 };
@@ -267,6 +310,30 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#E24A4A',
     fontWeight: '600',
+  },
+  bookingButton: {
+    backgroundColor: '#4A90E2',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginTop: 12,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  bookingIcon: {
+    marginRight: 8,
+  },
+  bookingButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginRight: 8,
   },
 });
 
