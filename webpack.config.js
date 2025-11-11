@@ -1,5 +1,6 @@
 const createExpoWebpackConfigAsync = require('@expo/webpack-config');
 const webpack = require('webpack');
+const path = require('path');
 
 module.exports = async function (env, argv) {
   const config = await createExpoWebpackConfigAsync(
@@ -49,12 +50,38 @@ module.exports = async function (env, argv) {
     "fs": false,
   };
 
-  // require를 전역으로 제공
+  // react-native-safe-area-context를 웹용 stub으로 강제 대체
   config.plugins.push(
-    new webpack.DefinePlugin({
-      'typeof require': JSON.stringify('undefined'),
-    })
+    new webpack.NormalModuleReplacementPlugin(
+      /react-native-safe-area-context/,
+      path.resolve(__dirname, 'safe-area-context-stub.js')
+    )
   );
+
+  // react-native-maps를 웹용 stub으로 강제 대체
+  config.plugins.push(
+    new webpack.NormalModuleReplacementPlugin(
+      /^react-native-maps$/,
+      path.resolve(__dirname, 'react-native-maps-stub.js')
+    )
+  );
+
+  // @react-navigation/elements에서 require() 호출을 import로 대체 (src와 lib 모두 처리)
+  config.module.rules.push({
+    test: /\.(js|jsx|ts|tsx)$/,
+    include: /node_modules\/@react-navigation\/elements/,
+    enforce: 'pre',
+    use: [
+      {
+        loader: 'string-replace-loader',
+        options: {
+          search: /require\(['"]react-native-safe-area-context['"]\)/g,
+          replace: '(function() { var stub = {}; stub.SafeAreaListener = undefined; return stub; })()',
+          flags: 'g'
+        }
+      }
+    ]
+  });
 
   // 외부 모듈 제외
   config.externals = {
