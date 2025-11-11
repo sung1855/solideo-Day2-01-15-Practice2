@@ -1,0 +1,19 @@
+{
+  "files": {
+    "main.js": "/solideo-Day2-01-15-Practice2/static/js/main.ca38a68f.js",
+    "static/js/22.15f8a28f.js": "/solideo-Day2-01-15-Practice2/static/js/22.15f8a28f.js",
+    "static/media/Ionicons.ttf": "/solideo-Day2-01-15-Practice2/static/media/Ionicons.40518f95b2e2a69c5c07.ttf",
+    "favicon.ico": "/solideo-Day2-01-15-Practice2/favicon.ico",
+    "index.html": "/solideo-Day2-01-15-Practice2/index.html",
+    "favicon-32.png": "/solideo-Day2-01-15-Practice2/favicon-32.png",
+    "favicon-16.png": "/solideo-Day2-01-15-Practice2/favicon-16.png",
+    "serve.json": "/solideo-Day2-01-15-Practice2/serve.json",
+    "manifest.json": "/solideo-Day2-01-15-Practice2/manifest.json",
+    "main.ca38a68f.js.map": "/solideo-Day2-01-15-Practice2/static/js/main.ca38a68f.js.map",
+    "22.15f8a28f.js.map": "/solideo-Day2-01-15-Practice2/static/js/22.15f8a28f.js.map"
+  },
+  "entrypoints": [
+    "static/js/22.15f8a28f.js",
+    "static/js/main.ca38a68f.js"
+  ]
+}
