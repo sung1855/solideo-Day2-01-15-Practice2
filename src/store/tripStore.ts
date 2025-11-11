@@ -103,7 +103,74 @@ export const useTripStore = create<TripState>((set, get) => ({
   // Mock 경로 검색
   searchRoutes: (tripInfo) => {
     set({ tripInfo });
-    // 실제로는 API를 호출하지만, 여기서는 Mock 데이터 사용
-    set({ routes: mockRoutes });
+
+    // 입력된 출발지와 도착지를 기반으로 경로 생성
+    const generateRoutes = () => {
+      const { departure, destination, departureDate, duration, travelers } = tripInfo;
+
+      // 기본 경로 템플릿들
+      const transportTypes = [
+        { type: 'train', operators: ['KTX', 'SRT', '무궁화호'], speed: 120, priceMultiplier: 1.2 },
+        { type: 'airplane', operators: ['대한항공', '아시아나항공', '제주항공', '진에어'], speed: 600, priceMultiplier: 2.5 },
+        { type: 'bus', operators: ['고속버스', '우등고속', '시외버스'], speed: 80, priceMultiplier: 0.7 },
+      ];
+
+      const generatedRoutes: Route[] = [];
+      let routeId = 1;
+
+      // 각 교통수단별로 2-3개의 경로 생성
+      transportTypes.forEach((transport) => {
+        const numRoutes = transport.type === 'airplane' ? 3 : 2;
+
+        for (let i = 0; i < numRoutes; i++) {
+          const operator = transport.operators[i % transport.operators.length];
+          const baseTime = 9 + (i * 3); // 09:00, 12:00, 15:00...
+          const departureTime = `${baseTime.toString().padStart(2, '0')}:00`;
+
+          // 거리 추정 (실제로는 API로 계산)
+          const estimatedDistance = 300 + Math.random() * 200; // 300-500km
+          const durationMinutes = Math.round((estimatedDistance / transport.speed) * 60);
+          const arrivalHour = baseTime + Math.floor(durationMinutes / 60);
+          const arrivalMinute = durationMinutes % 60;
+          const arrivalTime = `${(arrivalHour % 24).toString().padStart(2, '0')}:${arrivalMinute.toString().padStart(2, '0')}`;
+
+          // 가격 계산
+          const basePrice = Math.round(estimatedDistance * transport.priceMultiplier * 100);
+          const price = basePrice + Math.round((Math.random() - 0.5) * basePrice * 0.3);
+
+          const route: Route = {
+            id: routeId.toString(),
+            transportType: transport.type as 'train' | 'bus' | 'airplane',
+            operator,
+            vehicleNumber: `${transport.type.toUpperCase().slice(0, 3)}-${100 + routeId}`,
+            departure: {
+              location: departure,
+              time: departureTime,
+              coordinates: { latitude: 37.5 + Math.random() * 0.1, longitude: 127 + Math.random() * 0.1 },
+            },
+            arrival: {
+              location: destination,
+              time: arrivalTime,
+              coordinates: { latitude: 35.1 + Math.random() * 0.1, longitude: 129 + Math.random() * 0.1 },
+            },
+            duration: durationMinutes,
+            price,
+            transfers: 0,
+            seatsAvailable: Math.floor(Math.random() * 50) + 5,
+            rating: 4.0 + Math.random() * 0.9,
+            badges: price < basePrice * 0.85 ? ['특가'] : undefined,
+          };
+
+          generatedRoutes.push(route);
+          routeId++;
+        }
+      });
+
+      return generatedRoutes;
+    };
+
+    // 생성된 경로 설정
+    const routes = generateRoutes();
+    set({ routes });
   },
 }));

@@ -20,10 +20,16 @@ const HomeScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const { searchRoutes } = useTripStore();
 
+  // 오늘 날짜를 기본값으로 설정
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const defaultDate = tomorrow.toISOString().split('T')[0]; // YYYY-MM-DD 형식
+
   // 입력 상태
   const [departure, setDeparture] = useState('');
   const [destination, setDestination] = useState('');
-  const [departureDate, setDepartureDate] = useState('2024-12-01');
+  const [departureDate, setDepartureDate] = useState(defaultDate);
   const [duration, setDuration] = useState(3);
   const [travelers, setTravelers] = useState(2);
 
@@ -110,12 +116,32 @@ const HomeScreen = () => {
             <Ionicons name="calendar-outline" size={20} color="#4A90E2" />
             <Text style={styles.labelText}>출발 날짜</Text>
           </View>
-          <TextInput
-            style={styles.input}
-            placeholder="YYYY-MM-DD"
-            value={departureDate}
-            onChangeText={setDepartureDate}
-          />
+          {Platform.OS === 'web' ? (
+            <input
+              type="date"
+              value={departureDate}
+              onChange={(e: any) => setDepartureDate(e.target.value)}
+              min={today.toISOString().split('T')[0]}
+              style={{
+                borderWidth: 1,
+                borderColor: '#E0E0E0',
+                borderRadius: 10,
+                padding: 12,
+                fontSize: 16,
+                backgroundColor: '#F9F9F9',
+                fontFamily: 'inherit',
+                width: '100%',
+                boxSizing: 'border-box',
+              } as any}
+            />
+          ) : (
+            <TextInput
+              style={styles.input}
+              placeholder="YYYY-MM-DD"
+              value={departureDate}
+              onChangeText={setDepartureDate}
+            />
+          )}
         </View>
 
         {/* 여행 기간 */}
@@ -218,6 +244,9 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#fff',
     borderRadius: 15,
+    maxWidth: 600, // 웹에서 너무 넓지 않도록
+    alignSelf: 'center', // 중앙 정렬
+    width: '100%', // 전체 너비 활용
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
